@@ -1,19 +1,10 @@
 import socket
 import threading
-import getpass
-
-def broadcast_messages(message, exclude_client=None):
-    for client_socket in client_sockets:
-        if client_socket != exclude_client:
-            try:
-                message = f"[{username}]: {message}"
-                client_socket.send(message.encode())
-            except socket.error:
-                print("An error occurred while sending the message to a client.")
-                client_sockets.remove(client_socket)
-
 
 def handle_client(client_socket, client_address):
+    username = client_socket.recv(1024).decode()
+    print(f"Client {client_address} connected as {username}.")
+
     while True:
         try:
             message = client_socket.recv(1024).decode()
@@ -23,10 +14,19 @@ def handle_client(client_socket, client_address):
             break
 
         if message:
-            print(f"Received message: {message}")
-            broadcast_messages(message, exclude_client=client_socket)
+            print(f"Received message from {username}: {message}")
+            broadcast_messages(f"{username}: {message}", exclude_client=client_socket)
 
     client_socket.close()
+
+def broadcast_messages(message, exclude_client=None):
+    for client_socket in client_sockets:
+        if client_socket != exclude_client:
+            try:
+                client_socket.send(message.encode())
+            except socket.error:
+                print("An error occurred while sending the message to a client.")
+                client_sockets.remove(client_socket)
 
 def main():
     host = '127.0.0.1'  # آدرس IP سرور
@@ -40,13 +40,8 @@ def main():
 
     while True:
         client_socket, client_address = server_socket.accept()
-        print(f"Client {client_address} connected.")
-
-        client_sockets.append(client_socket)
-
         threading.Thread(target=handle_client, args=(client_socket, client_address)).start()
 
 if __name__ == '__main__':
-    username = getpass.getuser()  # نام کاربری فعلی که در اجرای کد استفاده شده است.
     client_sockets = []
     main()

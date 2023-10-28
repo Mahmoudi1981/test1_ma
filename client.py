@@ -1,5 +1,6 @@
 import socket
 import threading
+import getpass
 
 def receive_messages(client_socket):
     while True:
@@ -13,13 +14,11 @@ def receive_messages(client_socket):
 
 def process_message(message):
     if message:
-        sender_index = message.index(":")
-        sender = message[1:sender_index]
-        print(f"{sender}: {message[sender_index+2:]}")
+        print(f"Received message: {message}")
 
-def send_message(client_socket):
+def send_message(client_socket, username):
     while True:
-        message = input()
+        message = input(f"{username}: ")
         client_socket.send(message.encode())
 
 def main():
@@ -34,10 +33,11 @@ def main():
         return
 
     print("Connected to server.")
-    username = input("Enter your username: ")
+    username = input("Enter your username: ") # نام کاربری فعلی که در اجرای کد استفاده شده است.
+    client_socket.send(username.encode())
 
     threading.Thread(target=receive_messages, args=(client_socket,)).start()
-    threading.Thread(target=send_message, args=(client_socket,)).start()
+    threading.Thread(target=send_message, args=(client_socket, username)).start()
 
 if __name__ == '__main__':
     main()
